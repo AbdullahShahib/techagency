@@ -43,7 +43,7 @@ export default function Footer() {
               <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
                 {links.map(link => (
                   <li key={link}>
-                    <a href="#" style={{ color: 'var(--x4-muted)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.3s ease' }}
+                    <a href={title === 'Company' && link === 'About Us' ? '/about' : '#'} style={{ color: 'var(--x4-muted)', fontSize: '0.85rem', textDecoration: 'none', transition: 'color 0.3s ease' }}
                       onMouseEnter={e => e.target.style.color = 'var(--x4-text)'}
                       onMouseLeave={e => e.target.style.color = 'var(--x4-muted)'}>
                       {link}

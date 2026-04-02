@@ -260,6 +260,7 @@ export default function HeroSection() {
         </div>
 
         <nav className="hero-nav hero-anim" style={{ opacity: 0, transform: 'translateY(-20px)', transition: 'all 0.8s cubic-bezier(0.16,1,0.3,1) 0.1s' }}>
+          <a href="/about">About</a>
           <a href="#services">Services</a>
           <a href="#works">Works</a>
           <a href="#process">Process</a>

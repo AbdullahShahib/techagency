@@ -13,6 +13,7 @@ import ProcessSection from './components/sections/ProcessSection';
 import TestimonialsSection from './components/sections/TestimonialsSection';
 import ContactSection from './components/sections/ContactSection';
 import Footer from './components/sections/Footer';
+import AboutPage from './pages/AboutPage';
 
 // Admin
 import AdminLogin from './pages/admin/AdminLogin';
@@ -56,6 +57,7 @@ export default function App() {
         <Routes>
           {/* ── Public website ── */}
           <Route path="/" element={<PublicSite />} />
+          <Route path="/about" element={<AboutPage />} />
 
           {/* ── Admin login ── */}
           <Route path="/admin" element={<AdminLogin />} />
