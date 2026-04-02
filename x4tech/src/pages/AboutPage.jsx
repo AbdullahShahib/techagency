@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Github, Instagram, Linkedin, Mail, Twitter } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Cursor from '../components/ui/Cursor';
 import Footer from '../components/sections/Footer';
 import { getAll, COLS } from '../lib/firestore';
-import { GlassmorphismProfileCard } from '../components/ui/profile-card-1';
+import { TestimonialCarousel } from '../components/ui/profile-card-testimonial-carousel';
 
 const FALLBACK_MEMBERS = [
   {
@@ -76,19 +76,7 @@ export default function AboutPage() {
 
         <section style={{ padding: '4rem 3rem 8rem' }}>
           <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '2rem', justifyItems: 'center' }}>
-              {team.map((member) => (
-                <GlassmorphismProfileCard
-                  key={member.id}
-                  avatarUrl={member.headshotUrl || FALLBACK_MEMBERS[0].headshotUrl}
-                  name={member.name}
-                  title={member.role || 'Team Member'}
-                  bio={member.bio || 'Creative and technical professional at X4Tech.'}
-                  socialLinks={buildSocialLinks(member)}
-                  actionButton={buildActionButton(member)}
-                />
-              ))}
-            </div>
+            <TestimonialCarousel testimonials={team.map(mapMemberToTestimonial)} />
           </div>
         </section>
 
@@ -110,47 +98,17 @@ function toMailto(value) {
   return `mailto:${value}`;
 }
 
-function buildSocialLinks(member) {
-  return [
-    member.github && {
-      id: 'github',
-      icon: Github,
-      label: 'GitHub',
-      href: normalizeExternalUrl(member.github),
-    },
-    member.linkedin && {
-      id: 'linkedin',
-      icon: Linkedin,
-      label: 'LinkedIn',
-      href: normalizeExternalUrl(member.linkedin),
-    },
-    member.twitter && {
-      id: 'twitter',
-      icon: Twitter,
-      label: 'Twitter',
-      href: normalizeExternalUrl(member.twitter),
-    },
-    member.instagram && {
-      id: 'instagram',
-      icon: Instagram,
-      label: 'Instagram',
-      href: normalizeExternalUrl(member.instagram),
-    },
-    member.gmail && {
-      id: 'gmail',
-      icon: Mail,
-      label: 'Gmail',
-      href: toMailto(member.gmail),
-    },
-  ].filter(Boolean);
-}
-
-function buildActionButton(member) {
-  if (member.gmail) {
-    return { text: 'Contact Me', href: toMailto(member.gmail) };
-  }
-  if (member.github) {
-    return { text: 'View GitHub', href: normalizeExternalUrl(member.github) };
-  }
-  return { text: 'Contact Us', href: '/#contact' };
+function mapMemberToTestimonial(member) {
+  return {
+    name: member.name,
+    title: member.role || 'Team Member',
+    description: member.bio || 'Creative and technical professional at X4Tech.',
+    imageUrl: member.headshotUrl || FALLBACK_MEMBERS[0].headshotUrl,
+    githubUrl: member.github ? normalizeExternalUrl(member.github) : undefined,
+    twitterUrl: member.twitter ? normalizeExternalUrl(member.twitter) : undefined,
+    youtubeUrl: member.instagram ? normalizeExternalUrl(member.instagram) : undefined,
+    linkedinUrl: member.linkedin ? normalizeExternalUrl(member.linkedin) : undefined,
+    instagramUrl: member.instagram ? normalizeExternalUrl(member.instagram) : undefined,
+    gmailUrl: member.gmail ? toMailto(member.gmail) : undefined,
+  };
 }
