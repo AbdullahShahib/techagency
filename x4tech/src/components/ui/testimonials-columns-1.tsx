@@ -1,7 +1,22 @@
+"use client";
+
 import React from 'react';
 import { motion } from 'motion/react';
 
-export function TestimonialsColumn({ className, testimonials, duration = 10 }) {
+type Testimonial = {
+  text: string;
+  image: string;
+  name: string;
+  role: string;
+};
+
+type TestimonialsColumnProps = {
+  className?: string;
+  testimonials: Testimonial[];
+  duration?: number;
+};
+
+export const TestimonialsColumn = ({ className, testimonials, duration = 10 }: TestimonialsColumnProps) => {
   return (
     <div className={className}>
       <motion.div
@@ -41,4 +56,4 @@ export function TestimonialsColumn({ className, testimonials, duration = 10 }) {
       </motion.div>
     </div>
   );
-}
+};
