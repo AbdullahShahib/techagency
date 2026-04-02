@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import { useReveal } from '../../hooks/useReveal';
+import { getAll, COLS } from '../../lib/firestore';
 
 const testimonials = [
   {
@@ -35,15 +36,48 @@ const testimonials = [
 
 export default function TestimonialsSection() {
   const [current, setCurrent] = useState(0);
+  const [items, setItems] = useState([]);
   const sectionRef = useReveal();
 
   useEffect(() => {
-    const timer = setInterval(() => setCurrent(c => (c + 1) % testimonials.length), 5000);
-    return () => clearInterval(timer);
+    let alive = true;
+    (async () => {
+      try {
+        const data = await getAll(COLS.TESTIMONIALS);
+        if (alive && Array.isArray(data) && data.length) {
+          const mapped = data
+            .filter(t => t.visible !== false)
+            .map(t => ({
+              id: t.id,
+              text: t.quote || '',
+              name: t.clientName || 'Client',
+              role: [t.role, t.company].filter(Boolean).join(', '),
+              avatar: t.avatarUrl || FALLBACK_AVATAR,
+              stars: Number(t.rating) || 5,
+            }));
+          setItems(mapped);
+        }
+      } catch (_) {
+        // Keep local fallback data if Firestore read fails.
+      }
+    })();
+    return () => { alive = false; };
   }, []);
 
-  const prev = () => setCurrent(c => (c - 1 + testimonials.length) % testimonials.length);
-  const next = () => setCurrent(c => (c + 1) % testimonials.length);
+  const testimonialsToShow = items.length ? items : testimonials;
+
+  useEffect(() => {
+    if (!testimonialsToShow.length) return undefined;
+    const timer = setInterval(() => setCurrent(c => (c + 1) % testimonialsToShow.length), 5000);
+    return () => clearInterval(timer);
+  }, [testimonialsToShow]);
+
+  useEffect(() => {
+    if (current >= testimonialsToShow.length) setCurrent(0);
+  }, [current, testimonialsToShow.length]);
+
+  const prev = () => setCurrent(c => (c - 1 + testimonialsToShow.length) % testimonialsToShow.length);
+  const next = () => setCurrent(c => (c + 1) % testimonialsToShow.length);
 
   return (
     <section ref={sectionRef} style={{ background: 'var(--x4-black)', padding: '8rem 3rem', position: 'relative', overflow: 'hidden' }}>
@@ -59,9 +93,9 @@ export default function TestimonialsSection() {
         </div>
 
         <div className="reveal reveal-delay-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1px', background: 'var(--x4-border)', marginBottom: '3rem' }}>
-          {testimonials.map((t, i) => (
+          {testimonialsToShow.map((t, i) => (
             <div
-              key={i}
+              key={t.id || i}
               className="testimonial-card"
               style={{
                 transition: 'all 0.4s ease',
@@ -96,7 +130,7 @@ export default function TestimonialsSection() {
             onMouseLeave={e => { e.target.style.borderColor = 'var(--x4-border)'; e.target.style.color = 'var(--x4-muted)'; }}>
             <ChevronLeft size={18} />
           </button>
-          {testimonials.map((_, i) => (
+          {testimonialsToShow.map((_, i) => (
             <button key={i} onClick={() => setCurrent(i)} style={{ width: i === current ? '24px' : '6px', height: '6px', background: i === current ? 'var(--x4-cyan)' : 'var(--x4-border)', border: 'none', cursor: 'pointer', transition: 'all 0.4s ease', borderRadius: '3px' }} />
           ))}
           <button onClick={next} style={{ width: '44px', height: '44px', border: '1px solid var(--x4-border)', background: 'transparent', color: 'var(--x4-muted)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s ease' }}
@@ -109,3 +143,5 @@ export default function TestimonialsSection() {
     </section>
   );
 }
+
+const FALLBACK_AVATAR = 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&q=80';

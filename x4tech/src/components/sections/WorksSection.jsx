@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, ExternalLink } from 'lucide-react';
 import { useReveal } from '../../hooks/useReveal';
+import { getAll, COLS } from '../../lib/firestore';
 
 const works = [
   {
@@ -63,9 +64,38 @@ const filters = ['All', 'Web Development', 'Brand Identity', 'Mobile App', 'UI/U
 
 export default function WorksSection() {
   const [active, setActive] = useState('All');
+  const [items, setItems] = useState([]);
   const sectionRef = useReveal();
 
-  const filtered = active === 'All' ? works : works.filter(w => w.cat === active);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await getAll(COLS.PROJECTS);
+        if (alive && Array.isArray(data) && data.length) {
+          const mapped = data
+            .filter(p => p.status !== 'Archived')
+            .map((p, i) => ({
+              id: p.id,
+              cat: p.category || 'Project',
+              title: p.title || 'Untitled Project',
+              desc: p.shortDesc || '',
+              img: p.coverImageUrl || FALLBACK_IMG,
+              tags: Array.isArray(p.techStack) ? p.techStack : [],
+              size: p.featured ? 'large' : (i % 3 === 0 ? 'medium' : 'small')
+            }));
+          setItems(mapped);
+        }
+      } catch (_) {
+        // Keep local fallback data if Firestore read fails.
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const worksToShow = items.length ? items : works;
+  const filters = useMemo(() => ['All', ...new Set(worksToShow.map(w => w.cat))], [worksToShow]);
+  const filtered = active === 'All' ? worksToShow : worksToShow.filter(w => w.cat === active);
 
   return (
     <section id="works" ref={sectionRef} style={{ background: 'var(--x4-black)', padding: '8rem 3rem', position: 'relative', overflow: 'hidden' }}>
@@ -147,3 +177,5 @@ export default function WorksSection() {
     </section>
   );
 }
+
+const FALLBACK_IMG = 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80';

@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Monitor, Smartphone, Palette, Megaphone, Code2, Layers, ArrowUpRight } from 'lucide-react';
 import { useReveal } from '../../hooks/useReveal';
+import { getAll, COLS } from '../../lib/firestore';
 
 const services = [
   {
@@ -55,6 +56,36 @@ const services = [
 
 export default function ServicesSection() {
   const sectionRef = useReveal();
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const data = await getAll(COLS.SERVICES);
+        if (alive && Array.isArray(data) && data.length) {
+          const mapped = data
+            .filter(s => s.visible !== false)
+            .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
+            .map((s, i) => ({
+              id: s.id,
+              num: String(i + 1).padStart(2, '0'),
+              icon: ICON_MAP[s.icon] || Monitor,
+              name: s.title || 'Service',
+              desc: s.shortDesc || s.longDesc || '',
+              tags: Array.isArray(s.tags) ? s.tags : [],
+              color: PALETTE[i % PALETTE.length],
+            }));
+          setItems(mapped);
+        }
+      } catch (_) {
+        // Keep local fallback data if Firestore read fails.
+      }
+    })();
+    return () => { alive = false; };
+  }, []);
+
+  const servicesToShow = items.length ? items : services;
 
   return (
     <section id="services" ref={sectionRef} style={{ background: 'var(--x4-dark)', position: 'relative', padding: '8rem 3rem', overflow: 'hidden' }}>
@@ -93,10 +124,10 @@ export default function ServicesSection() {
 
         {/* Services Grid */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px', background: 'var(--x4-border)' }}>
-          {services.map((svc, i) => {
+          {servicesToShow.map((svc, i) => {
             const Icon = svc.icon;
             return (
-              <div key={i} className={`service-card reveal reveal-delay-${(i % 3) + 1}`}>
+              <div key={svc.id || i} className={`service-card reveal reveal-delay-${(i % 3) + 1}`}>
                 <div className="service-num">{svc.num}</div>
                 <div className="service-icon-wrap" style={{ borderColor: `${svc.color}30` }}>
                   <Icon size={22} color={svc.color} />
@@ -117,3 +148,14 @@ export default function ServicesSection() {
     </section>
   );
 }
+
+const ICON_MAP = {
+  Monitor,
+  Smartphone,
+  Palette,
+  Megaphone,
+  Code2,
+  Layers,
+};
+
+const PALETTE = ['#0066FF', '#00D4FF', '#7B00FF', '#FF003C'];
