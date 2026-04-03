@@ -120,7 +120,7 @@ export function TestimonialCarousel({ className, testimonials }: TestimonialCaro
           </AnimatePresence>
         </div>
 
-        <div className="bg-white dark:bg-card rounded-3xl shadow-2xl p-8 ml-[-80px] z-10 max-w-xl flex-1">
+        <div className="bg-white rounded-3xl shadow-2xl p-8 ml-[-80px] z-10 max-w-xl flex-1">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentTestimonial.name}
@@ -141,8 +141,8 @@ export function TestimonialCarousel({ className, testimonials }: TestimonialCaro
 
               <TypewriterEffectSmooth
                 words={bioWords}
-                className="mb-8"
-                cursorClassName="bg-cyan-500"
+                className="mb-8 text-base leading-relaxed text-black"
+                cursorClassName="bg-black"
               />
 
               <div className="flex space-x-4 flex-wrap gap-y-3">
@@ -185,7 +185,7 @@ export function TestimonialCarousel({ className, testimonials }: TestimonialCaro
           </AnimatePresence>
         </div>
 
-        <div className="px-4">
+        <div className="px-4 py-5 bg-white rounded-3xl shadow-xl">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentTestimonial.name}
@@ -203,8 +203,8 @@ export function TestimonialCarousel({ className, testimonials }: TestimonialCaro
               <BubbleText text={currentTestimonial.title} className="text-center mt-1 mb-4" />
               <TypewriterEffectSmooth
                 words={bioWords}
-                className="justify-center mb-6"
-                cursorClassName="bg-cyan-500"
+                className="justify-center mb-6 text-black"
+                cursorClassName="bg-black"
               />
 
               <div className="flex justify-center space-x-4 flex-wrap gap-y-3">
