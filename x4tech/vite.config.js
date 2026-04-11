@@ -18,6 +18,7 @@ export default defineConfig({
           if (id.includes('three')) return 'three';
           if (id.includes('framer-motion') || id.includes('/motion/')) return 'motion';
           if (id.includes('gsap')) return 'gsap';
+          if (id.includes('@supabase')) return 'supabase';
           if (id.includes('firebase')) return 'firebase';
           if (id.includes('lucide-react')) return 'lucide-react';
           if (id.includes('react-router-dom')) return 'router';

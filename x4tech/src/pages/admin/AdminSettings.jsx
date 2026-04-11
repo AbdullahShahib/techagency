@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Settings, Key, Database, Shield, Copy, Check } from 'lucide-react';
 import { PageHeader, Field, Input, Btn, useToast } from '../../components/admin/AdminUI';
 import { useAuth } from '../../contexts/AuthContext';
-import { updatePassword, EmailAuthProvider, reauthenticateWithCredential } from 'firebase/auth';
-import { auth } from '../../lib/firebase';
+import { supabase } from '../../lib/supabase';
 
 export default function AdminSettings() {
   const { user } = useAuth();
@@ -18,9 +17,17 @@ export default function AdminSettings() {
     if (pwForm.next.length < 8) { toast('Password must be 8+ characters', 'error'); return; }
     setPwSaving(true);
     try {
-      const cred = EmailAuthProvider.credential(user.email, pwForm.current);
-      await reauthenticateWithCredential(auth.currentUser, cred);
-      await updatePassword(auth.currentUser, pwForm.next);
+      const { error: reauthError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: pwForm.current,
+      });
+      if (reauthError) throw reauthError;
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: pwForm.next,
+      });
+      if (updateError) throw updateError;
+
       toast('Password updated!');
       setPwForm({ current: '', next: '', confirm: '' });
     } catch (_) { toast('Incorrect current password', 'error'); }
@@ -34,18 +41,15 @@ export default function AdminSettings() {
   };
 
   const envVars = [
-    { key: 'VITE_FIREBASE_API_KEY',             val: 'your_api_key' },
-    { key: 'VITE_FIREBASE_AUTH_DOMAIN',          val: 'your_project.firebaseapp.com' },
-    { key: 'VITE_FIREBASE_PROJECT_ID',           val: 'your_project_id' },
-    { key: 'VITE_FIREBASE_STORAGE_BUCKET',       val: 'your_project.appspot.com' },
-    { key: 'VITE_FIREBASE_MESSAGING_SENDER_ID',  val: 'your_sender_id' },
-    { key: 'VITE_FIREBASE_APP_ID',               val: 'your_app_id' },
+    { key: 'VITE_SUPABASE_URL',                  val: 'https://your-project-ref.supabase.co' },
+    { key: 'VITE_SUPABASE_ANON_KEY',             val: 'your_anon_key' },
+    { key: 'VITE_SUPABASE_STORAGE_BUCKET',       val: 'media' },
   ];
 
   return (
     <div>
       <ToastContainer />
-      <PageHeader title="Settings" subtitle="Account, Firebase setup, and configuration" />
+      <PageHeader title="Settings" subtitle="Account, Supabase setup, and configuration" />
 
       {/* Account */}
       <div style={{ maxWidth: '640px' }}>
@@ -79,22 +83,22 @@ export default function AdminSettings() {
           </form>
         </div>
 
-        {/* Firebase setup guide */}
+        {/* Supabase setup guide */}
         <div style={{ padding: '1.5rem', background: 'var(--x4-card)', border: '1px solid rgba(0,212,255,0.2)', marginBottom: '2rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '1.25rem' }}>
             <Database size={16} color="var(--x4-cyan)" />
-            <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '0.65rem', letterSpacing: '0.3em', color: 'var(--x4-cyan)', textTransform: 'uppercase' }}>Firebase Setup Guide</p>
+            <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '0.65rem', letterSpacing: '0.3em', color: 'var(--x4-cyan)', textTransform: 'uppercase' }}>Supabase Setup Guide</p>
           </div>
 
           <div style={{ fontSize: '0.85rem', color: 'var(--x4-muted)', lineHeight: 1.8, marginBottom: '1.5rem' }}>
-            <p style={{ marginBottom: '0.5rem', color: 'var(--x4-text)', fontWeight: 500 }}>Follow these steps to connect Firebase:</p>
+            <p style={{ marginBottom: '0.5rem', color: 'var(--x4-text)', fontWeight: 500 }}>Follow these steps to connect Supabase:</p>
             <ol style={{ paddingLeft: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-              <li>Go to <a href="https://console.firebase.google.com" target="_blank" rel="noreferrer" style={{ color: 'var(--x4-cyan)' }}>console.firebase.google.com</a> and create a project</li>
-              <li>Enable <strong style={{ color: 'var(--x4-text)' }}>Authentication</strong> → Email/Password sign-in</li>
-              <li>Create your admin user in Authentication → Users tab</li>
-              <li>Enable <strong style={{ color: 'var(--x4-text)' }}>Firestore Database</strong> → Start in production mode</li>
-              <li>Enable <strong style={{ color: 'var(--x4-text)' }}>Storage</strong></li>
-              <li>Go to Project Settings → Add a web app → copy the config values</li>
+              <li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noreferrer" style={{ color: 'var(--x4-cyan)' }}>supabase.com/dashboard</a> and create a project</li>
+              <li>In Authentication → Providers, enable <strong style={{ color: 'var(--x4-text)' }}>Email</strong></li>
+              <li>Create your admin user in Authentication → Users</li>
+              <li>Create tables named: <code style={{ background: 'rgba(255,255,255,0.06)', padding: '0.1rem 0.4rem', color: 'var(--x4-text)' }}>projects, services, testimonials, clients, team, blog, seo, case_studies, jobs, settings</code></li>
+              <li>Create a Storage bucket named <code style={{ background: 'rgba(255,255,255,0.06)', padding: '0.1rem 0.4rem', color: 'var(--x4-text)' }}>media</code> and make it public</li>
+              <li>Project Settings → API: copy Project URL and anon key</li>
               <li>Create a <code style={{ background: 'rgba(255,255,255,0.06)', padding: '0.1rem 0.4rem', color: 'var(--x4-text)' }}>.env</code> file in the project root with the values below</li>
             </ol>
           </div>
@@ -119,29 +123,25 @@ export default function AdminSettings() {
 
           <div style={{ padding: '0.75rem 1rem', background: 'rgba(255,0,60,0.05)', border: '1px solid rgba(255,0,60,0.2)', fontSize: '0.78rem', color: 'var(--x4-muted)', display: 'flex', gap: '0.5rem' }}>
             <span style={{ color: '#ff6b8a', flexShrink: 0 }}>⚠</span>
-            Add <code style={{ color: 'var(--x4-text)' }}>.env</code> to your <code style={{ color: 'var(--x4-text)' }}>.gitignore</code> — never commit Firebase keys to Git.
+            Add <code style={{ color: 'var(--x4-text)' }}>.env</code> to your <code style={{ color: 'var(--x4-text)' }}>.gitignore</code> — never commit Supabase keys to Git.
           </div>
         </div>
 
-        {/* Firestore Rules reminder */}
+        {/* Supabase RLS reminder */}
         <div style={{ padding: '1.25rem', background: 'var(--x4-card)', border: '1px solid var(--x4-border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.75rem' }}>
             <Key size={14} color="var(--x4-muted)" />
-            <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '0.62rem', letterSpacing: '0.2em', color: 'var(--x4-muted)', textTransform: 'uppercase' }}>Firestore Security Rules</p>
+            <p style={{ fontFamily: 'Space Mono, monospace', fontSize: '0.62rem', letterSpacing: '0.2em', color: 'var(--x4-muted)', textTransform: 'uppercase' }}>Supabase RLS Policy</p>
           </div>
           <p style={{ fontSize: '0.8rem', color: 'var(--x4-muted)', lineHeight: 1.7, marginBottom: '1rem' }}>
-            In Firebase Console → Firestore → Rules, use these rules to allow only authenticated users to write:
+            In SQL Editor, use policies to allow public read and authenticated writes:
           </p>
           <pre style={{ background: 'var(--x4-dark)', padding: '1rem', fontSize: '0.72rem', color: '#e8e8f0', overflowX: 'auto', fontFamily: 'Space Mono, monospace', lineHeight: 1.6, border: '1px solid var(--x4-border)' }}>
-{`rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    match /{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null;
-    }
-  }
-}`}
+{`alter table projects enable row level security;
+create policy "public read" on projects for select using (true);
+create policy "auth write" on projects for all
+using (auth.role() = 'authenticated')
+with check (auth.role() = 'authenticated');`}
           </pre>
         </div>
       </div>

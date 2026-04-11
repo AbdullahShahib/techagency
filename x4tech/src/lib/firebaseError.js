@@ -1,6 +1,7 @@
 export function formatFirebaseError(err, fallback = 'Operation failed') {
   const code = err?.code || '';
   const message = err?.message || '';
+  const supabaseCode = err?.status || err?.error_code || '';
 
   // Check for CORS errors (mostly on file uploads)
   if (message?.includes('CORS') || message?.includes('ERR_FAILED') || code?.includes('ERR_')) {
@@ -10,6 +11,26 @@ export function formatFirebaseError(err, fallback = 'Operation failed') {
   // Check for billing errors
   if (message?.includes('billing') || message?.includes('delinquent')) {
     return 'Firebase configuration issue: Billing account disabled. Admin needs to enable billing.';
+  }
+
+  if (message?.includes('Invalid login credentials')) {
+    return 'Invalid email or password.';
+  }
+
+  if (message?.includes('row-level security') || message?.includes('new row violates row-level security policy')) {
+    return 'Permission denied by Supabase RLS policy.';
+  }
+
+  if (message?.includes('duplicate key value')) {
+    return 'A record with the same ID already exists.';
+  }
+
+  if (supabaseCode === 401 || supabaseCode === 403) {
+    return 'You are not authorized to perform this action.';
+  }
+
+  if (supabaseCode === 404) {
+    return 'Requested record not found.';
   }
 
   const map = {
