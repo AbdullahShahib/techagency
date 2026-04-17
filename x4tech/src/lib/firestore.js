@@ -94,8 +94,19 @@ export async function uploadFile(path, file, onProgress) {
   if (error) throw error;
 
   const { data } = supabase.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+  let publicUrl = data.publicUrl;
+  try {
+    const parsed = new URL(publicUrl);
+    const isLocalHost = parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1';
+    if (isLocalHost && parsed.pathname.startsWith('/api/supabase/')) {
+      publicUrl = `${parsed.pathname}${parsed.search}`;
+    }
+  } catch (_) {
+    // Keep original public URL when parsing fails.
+  }
+
   if (onProgress) onProgress(100);
-  return data.publicUrl;
+  return publicUrl;
 }
 
 export async function deleteFile(url) {
