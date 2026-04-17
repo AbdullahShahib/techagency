@@ -10,6 +10,63 @@ function inflateRow(row) {
   };
 }
 
+const MEDIA_FIELD_SUFFIX = 'Url';
+const MEDIA_SIGN_TTL_SECONDS = 60 * 60 * 24 * 7;
+
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function extractMediaObjectPath(value) {
+  if (typeof value !== 'string') return null;
+  const input = value.trim();
+  if (!input) return null;
+
+  const bucket = escapeRegExp(MEDIA_BUCKET);
+  const patterns = [
+    new RegExp(`/storage/v1/object/public/${bucket}/([^?]+)`),
+    new RegExp(`/storage/v1/object/sign/${bucket}/([^?]+)`),
+    new RegExp(`^/api/supabase/storage/v1/object/public/${bucket}/([^?]+)`),
+    new RegExp(`^/api/supabase/storage/v1/object/sign/${bucket}/([^?]+)`),
+  ];
+
+  for (const pattern of patterns) {
+    const match = input.match(pattern);
+    if (match && match[1]) {
+      return decodeURIComponent(match[1]);
+    }
+  }
+
+  return null;
+}
+
+async function toSignedMediaUrl(value) {
+  const path = extractMediaObjectPath(value);
+  if (!path) return value;
+
+  const { data, error } = await supabase.storage
+    .from(MEDIA_BUCKET)
+    .createSignedUrl(path, MEDIA_SIGN_TTL_SECONDS);
+
+  if (error || !data?.signedUrl) return '';
+  return data.signedUrl;
+}
+
+async function hydrateMediaUrls(record) {
+  if (!record || typeof record !== 'object') return record;
+
+  const entries = await Promise.all(
+    Object.entries(record).map(async ([key, value]) => {
+      if (key.endsWith(MEDIA_FIELD_SUFFIX) && typeof value === 'string' && value) {
+        return [key, await toSignedMediaUrl(value)];
+      }
+      return [key, value];
+    })
+  );
+
+  return Object.fromEntries(entries);
+}
+
 // ─── Generic CRUD ───────────────────────────────────────────
 export async function getAll(col) {
   let query = supabase.from(col).select('*').order('createdAt', { ascending: false });
@@ -23,7 +80,8 @@ export async function getAll(col) {
   }
 
   if (error) throw error;
-  return (data || []).map(inflateRow);
+  const rows = (data || []).map(inflateRow);
+  return Promise.all(rows.map(hydrateMediaUrls));
 }
 
 export async function getOne(col, id) {
@@ -34,7 +92,7 @@ export async function getOne(col, id) {
     .maybeSingle();
 
   if (error) throw error;
-  return inflateRow(data);
+  return hydrateMediaUrls(inflateRow(data));
 }
 
 export async function create(col, data) {
@@ -57,7 +115,7 @@ export async function create(col, data) {
     .single();
 
   if (error) throw error;
-  return inflateRow(inserted);
+  return hydrateMediaUrls(inflateRow(inserted));
 }
 
 export async function update(col, id, data) {
@@ -71,7 +129,7 @@ export async function update(col, id, data) {
     .single();
 
   if (error) throw error;
-  return inflateRow(updated);
+  return hydrateMediaUrls(inflateRow(updated));
 }
 
 export async function remove(col, id) {

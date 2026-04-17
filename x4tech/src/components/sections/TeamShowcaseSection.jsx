@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TeamShowcase from '@/components/ui/team-showcase';
 import { getAll, COLS } from '@/lib/firestore';
-import { supabase, MEDIA_BUCKET } from '@/lib/supabase';
 import { sanitizeImageUrl } from '@/lib/utils';
 
 const FALLBACK_TEAM = [
@@ -40,27 +39,17 @@ export default function TeamShowcaseSection() {
     let alive = true;
     (async () => {
       try {
-        let hasMediaBucket = false;
-        try {
-          const { data: buckets } = await supabase.storage.listBuckets();
-          hasMediaBucket = (buckets || []).some((bucket) => bucket.id === MEDIA_BUCKET);
-        } catch (_) {
-          hasMediaBucket = false;
-        }
-
         const data = await getAll(COLS.TEAM);
         if (!alive || !Array.isArray(data) || !data.length) return;
 
         const mapped = data
           .filter((m) => m.visible !== false)
           .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
-          .map((m, i) => ({
+          .map((m) => ({
             id: m.id,
             name: m.name || 'Team Member',
             role: m.role || 'Contributor',
-            image: hasMediaBucket
-              ? sanitizeImageUrl(m.headshotUrl)
-              : FALLBACK_TEAM[i % FALLBACK_TEAM.length].image,
+            image: sanitizeImageUrl(m.headshotUrl),
             bio: m.bio || 'Creative and technical professional at X4Tech.',
             social: {
               twitter: m.twitter ? normalizeExternalUrl(m.twitter) : undefined,

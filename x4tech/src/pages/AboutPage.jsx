@@ -4,7 +4,6 @@ import { useLocation } from 'react-router-dom';
 import Cursor from '../components/ui/Cursor';
 import Footer from '../components/sections/Footer';
 import { getAll, COLS } from '../lib/firestore';
-import { supabase, MEDIA_BUCKET } from '../lib/supabase';
 import { sanitizeImageUrl } from '../lib/utils';
 import { TestimonialCarousel } from '../components/ui/profile-card-testimonial-carousel';
 
@@ -41,25 +40,15 @@ export default function AboutPage() {
     let alive = true;
     (async () => {
       try {
-        let hasMediaBucket = false;
-        try {
-          const { data: buckets } = await supabase.storage.listBuckets();
-          hasMediaBucket = (buckets || []).some((bucket) => bucket.id === MEDIA_BUCKET);
-        } catch (_) {
-          hasMediaBucket = false;
-        }
-
         const data = await getAll(COLS.TEAM);
         if (!alive) return;
         if (Array.isArray(data) && data.length) {
           const mapped = data
             .filter((m) => m.visible !== false)
             .sort((a, b) => (Number(a.order) || 0) - (Number(b.order) || 0))
-            .map((m, i) => ({
+            .map((m) => ({
               ...m,
-              headshotUrl: hasMediaBucket
-                ? sanitizeImageUrl(m.headshotUrl)
-                : FALLBACK_MEMBERS[i % FALLBACK_MEMBERS.length].headshotUrl,
+              headshotUrl: sanitizeImageUrl(m.headshotUrl),
             }));
           setMembers(mapped);
         }
