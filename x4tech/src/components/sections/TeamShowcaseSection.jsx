@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import TeamShowcase from '@/components/ui/team-showcase';
 import { getAll, COLS } from '@/lib/firestore';
+import { sanitizeImageUrl } from '@/lib/utils';
 
 const FALLBACK_TEAM = [
   {
@@ -48,7 +49,7 @@ export default function TeamShowcaseSection() {
             id: m.id,
             name: m.name || 'Team Member',
             role: m.role || 'Contributor',
-            image: m.headshotUrl || FALLBACK_TEAM[0].image,
+            image: sanitizeImageUrl(m.headshotUrl),
             bio: m.bio || 'Creative and technical professional at X4Tech.',
             social: {
               twitter: m.twitter ? normalizeExternalUrl(m.twitter) : undefined,

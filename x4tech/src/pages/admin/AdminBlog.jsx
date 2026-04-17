@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Plus } from 'lucide-react';
 import { getAll, create, update, remove, uploadFile, COLS } from '../../lib/firestore';
+import { sanitizeImageUrl } from '../../lib/utils';
 import {
   PageHeader, Btn, Field, Input, Select, Toggle, TagInput,
   ImageUpload, Modal, Confirm, DataTable, useToast
@@ -63,7 +64,10 @@ export default function AdminBlog() {
   const f = (key) => (val) => setForm(p => ({ ...p, [key]: typeof val === 'object' && val?.target ? val.target.value : val }));
 
   const cols = [
-    { key: 'coverImageUrl', label: '', render: v => v ? <img src={v} alt="" style={{ width: '52px', height: '36px', objectFit: 'cover', border: '1px solid var(--x4-border)' }} /> : '—' },
+    { key: 'coverImageUrl', label: '', render: v => {
+      const safe = sanitizeImageUrl(v);
+      return safe ? <img src={safe} alt="" style={{ width: '52px', height: '36px', objectFit: 'cover', border: '1px solid var(--x4-border)' }} /> : '—';
+    } },
     { key: 'title',    label: 'Title', maxWidth: '240px' },
     { key: 'category', label: 'Category' },
     { key: 'status',   label: 'Status', render: v => <span style={{ padding: '0.2rem 0.6rem', background: v === 'Published' ? 'rgba(0,255,136,0.1)' : v === 'Draft' ? 'rgba(255,255,255,0.05)' : 'rgba(0,102,255,0.1)', color: v === 'Published' ? '#00ff88' : v === 'Draft' ? 'var(--x4-muted)' : 'var(--x4-cyan)', fontFamily: 'Space Mono, monospace', fontSize: '0.58rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>{v}</span> },

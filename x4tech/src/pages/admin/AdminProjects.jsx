@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, ExternalLink, Image } from 'lucide-react';
 import { getAll, create, update, remove, uploadFile, COLS } from '../../lib/firestore';
 import { formatFirebaseError } from '../../lib/firebaseError';
+import { sanitizeImageUrl } from '../../lib/utils';
 import {
   PageHeader, Btn, Field, Input, Select, Toggle, TagInput,
   ImageUpload, Modal, Confirm, DataTable, useToast
@@ -74,7 +75,12 @@ export default function AdminProjects() {
   const f = (key) => (val) => setForm(p => ({ ...p, [key]: typeof val === 'object' && val?.target ? val.target.value : val }));
 
   const cols = [
-    { key: 'coverImageUrl', label: '', render: v => v ? <img src={v} alt="" style={{ width: '48px', height: '36px', objectFit: 'cover', border: '1px solid var(--x4-border)' }} /> : <div style={{ width: '48px', height: '36px', background: 'var(--x4-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Image size={14} color="var(--x4-muted)" /></div> },
+    { key: 'coverImageUrl', label: '', render: v => {
+      const safe = sanitizeImageUrl(v);
+      return safe
+        ? <img src={safe} alt="" style={{ width: '48px', height: '36px', objectFit: 'cover', border: '1px solid var(--x4-border)' }} />
+        : <div style={{ width: '48px', height: '36px', background: 'var(--x4-border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Image size={14} color="var(--x4-muted)" /></div>;
+    } },
     { key: 'title',    label: 'Title',    maxWidth: '200px' },
     { key: 'category', label: 'Category' },
     { key: 'status',   label: 'Status',   render: v => <span style={{ padding: '0.2rem 0.6rem', background: v === 'Live' ? 'rgba(0,255,136,0.1)' : 'rgba(0,102,255,0.1)', color: v === 'Live' ? '#00ff88' : 'var(--x4-cyan)', fontFamily: 'Space Mono, monospace', fontSize: '0.6rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>{v}</span> },

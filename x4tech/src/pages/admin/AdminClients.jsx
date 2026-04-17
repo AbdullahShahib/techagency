@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { getAll, create, update, remove, uploadFile, COLS } from '../../lib/firestore';
+import { sanitizeImageUrl } from '../../lib/utils';
 import {
   PageHeader, Btn, Field, Input, Toggle,
   ImageUpload, FileUpload, Modal, Confirm, DataTable, useToast
@@ -64,7 +65,12 @@ export default function AdminClients() {
   const f = (key) => (val) => setForm(p => ({ ...p, [key]: typeof val === 'object' && val?.target ? val.target.value : val }));
 
   const logoCols = [
-    { key: 'logoUrl', label: '', render: v => v ? <img src={v} alt="" style={{ height: '28px', maxWidth: '80px', objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.7 }} /> : '—' },
+    { key: 'logoUrl', label: '', render: v => {
+      const safe = sanitizeImageUrl(v);
+      return safe
+        ? <img src={safe} alt="" style={{ height: '28px', maxWidth: '80px', objectFit: 'contain', filter: 'brightness(0) invert(1)', opacity: 0.7 }} />
+        : '—';
+    } },
     { key: 'name', label: 'Company' },
     { key: 'website', label: 'Website' },
     { key: 'visible', label: 'Visible', render: v => <span style={{ color: v ? '#00ff88' : 'var(--x4-muted)' }}>{v ? 'Yes' : 'No'}</span> },

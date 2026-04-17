@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Plus } from 'lucide-react';
 import { getAll, create, update, remove, uploadFile, COLS } from '../../lib/firestore';
+import { sanitizeImageUrl } from '../../lib/utils';
 import {
   PageHeader, Btn, Field, Input, Toggle,
   ImageUpload, FileUpload, Modal, Confirm, DataTable, useToast
@@ -85,7 +86,12 @@ export default function AdminTeam({ defaultTab = 'team' }) {
   const f = (key) => (val) => setForm(p => ({ ...p, [key]: typeof val === 'object' && val?.target ? val.target.value : val }));
 
   const memberCols = [
-    { key: 'headshotUrl', label: '', render: v => v ? <img src={v} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} /> : <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--x4-border)' }} /> },
+    { key: 'headshotUrl', label: '', render: v => {
+      const safe = sanitizeImageUrl(v);
+      return safe
+        ? <img src={safe} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
+        : <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--x4-border)' }} />;
+    } },
     { key: 'name',   label: 'Name' },
     { key: 'role',   label: 'Role' },
     { key: 'order',  label: 'Order' },

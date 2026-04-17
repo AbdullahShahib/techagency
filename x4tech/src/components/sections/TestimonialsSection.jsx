@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useReveal } from '../../hooks/useReveal';
 import { getAll, COLS } from '../../lib/firestore';
+import { sanitizeImageUrl } from '../../lib/utils';
 import { TestimonialsColumn } from '../../components/ui/testimonials-columns-1';
 import { motion } from 'motion/react';
 
@@ -76,7 +77,7 @@ export default function TestimonialsSection() {
             .map(t => ({
               id: t.id,
               text: t.quote || '',
-              image: t.avatarUrl || FALLBACK_AVATAR,
+              image: sanitizeImageUrl(t.avatarUrl),
               name: t.clientName || 'Client',
               role: [t.role, t.company].filter(Boolean).join(', '),
             }));

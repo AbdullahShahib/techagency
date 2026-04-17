@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Plus, Star } from 'lucide-react';
 import { getAll, create, update, remove, uploadFile, COLS } from '../../lib/firestore';
 import { formatFirebaseError } from '../../lib/firebaseError';
+import { sanitizeImageUrl } from '../../lib/utils';
 import {
   PageHeader, Btn, Field, Input, Select, Toggle,
   ImageUpload, Modal, Confirm, DataTable, useToast
@@ -50,7 +51,12 @@ export default function AdminTestimonials() {
   const f = (key) => (val) => setForm(p => ({ ...p, [key]: typeof val === 'object' && val?.target ? val.target.value : val }));
 
   const cols = [
-    { key: 'avatarUrl', label: '', render: v => v ? <img src={v} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} /> : <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--x4-border)' }} /> },
+    { key: 'avatarUrl', label: '', render: v => {
+      const safe = sanitizeImageUrl(v);
+      return safe
+        ? <img src={safe} alt="" style={{ width: '36px', height: '36px', borderRadius: '50%', objectFit: 'cover' }} />
+        : <div style={{ width: '36px', height: '36px', borderRadius: '50%', background: 'var(--x4-border)' }} />;
+    } },
     { key: 'clientName', label: 'Name' },
     { key: 'role',       label: 'Role' },
     { key: 'company',    label: 'Company' },

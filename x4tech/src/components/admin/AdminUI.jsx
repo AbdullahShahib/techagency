@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { X, Upload, Loader2, AlertTriangle } from 'lucide-react';
+import { sanitizeImageUrl } from '../../lib/utils';
 
 // ── Page header ─────────────────────────────────────────────
 export function PageHeader({ title, subtitle, action }) {
@@ -121,6 +122,7 @@ export function TagInput({ value = [], onChange, suggestions = [], placeholder =
 export function ImageUpload({ value, onChange, label = 'Upload Image', aspect }) {
   const [dragging, setDragging] = useState(false);
   const inputRef = useRef();
+  const safeValue = typeof value === 'string' ? sanitizeImageUrl(value) : '';
 
   const handleFile = (file) => {
     if (!file || !file.type.startsWith('image/')) return;
@@ -137,8 +139,8 @@ export function ImageUpload({ value, onChange, label = 'Upload Image', aspect })
       onClick={() => inputRef.current?.click()}
       style={{ border: `2px dashed ${dragging ? 'var(--x4-blue)' : 'var(--x4-border)'}`, background: dragging ? 'rgba(0,102,255,0.04)' : 'var(--x4-dark)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1.5rem', transition: 'all 0.2s', minHeight: '120px', position: 'relative' }}>
       <input ref={inputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={e => handleFile(e.target.files[0])} />
-      {value?.preview || (typeof value === 'string' && value) ? (
-        <img src={value?.preview || value} alt="" style={{ maxHeight: '120px', maxWidth: '100%', objectFit: 'contain' }} />
+      {value?.preview || safeValue ? (
+        <img src={value?.preview || safeValue} alt="" style={{ maxHeight: '120px', maxWidth: '100%', objectFit: 'contain' }} />
       ) : (
         <>
           <Upload size={22} color="var(--x4-muted)" />

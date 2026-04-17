@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { ArrowUpRight, ExternalLink } from 'lucide-react';
 import { useReveal } from '../../hooks/useReveal';
 import { getAll, COLS } from '../../lib/firestore';
+import { sanitizeImageUrl } from '../../lib/utils';
 
 const works = [
   {
@@ -80,7 +81,7 @@ export default function WorksSection() {
               cat: p.category || 'Project',
               title: p.title || 'Untitled Project',
               desc: p.shortDesc || '',
-              img: p.coverImageUrl || FALLBACK_IMG,
+              img: sanitizeImageUrl(p.coverImageUrl),
               tags: Array.isArray(p.techStack) ? p.techStack : [],
               size: p.featured ? 'large' : (i % 3 === 0 ? 'medium' : 'small')
             }));
